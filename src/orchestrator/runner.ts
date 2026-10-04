@@ -1,12 +1,22 @@
 import { ExecutionContext } from '../types/cli.js';
 import { AgentContext, SubagentResult, CodeRewriteProposal } from '../types/agent.js';
+import { ensureCleanGitState } from '../git/guard.js';
 import { SecurityAgent } from '../subagents/security.js';
 import { DependencyAuditAgent } from '../subagents/deps.js';
 import { RefactorAgent } from '../subagents/refactor.js';
 import { processProposalsInteractive } from '../git/reviewer.js';
-import { createSpinner, logInfo, logSuccess } from '../cli/ui.js';
+import { createSpinner, logSuccess } from '../cli/ui.js';
 
 export async function runMaintenance(context: ExecutionContext): Promise<SubagentResult[]> {
+    const readyToProceed = await ensureCleanGitState(context.absolutePath, {
+        dryRun: context.options.dryRun,
+        autoApprove: context.options.autoApprove
+    });
+
+    if (!readyToProceed) {
+        return [];
+    }
+
     const results: SubagentResult[] = [];
     const selected = context.options.subagents;
     const runAll = selected.includes('all');
