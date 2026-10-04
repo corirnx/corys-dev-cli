@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { loadAndMapEnvironment } from './config/env.js';
+loadAndMapEnvironment();
+
 import { Command } from 'commander';
 import { registerCheckCommand } from './cli/commands/check.js';
 
