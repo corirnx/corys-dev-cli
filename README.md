@@ -2,7 +2,7 @@
 
 > Personal multi-agent CLI tool for automated repository maintenance, security auditing, dependency/model checks, and code refactoring.
 
-`corys-dev` is an interactive Node.js/TypeScript developer CLI designed to audit and modernize local codebases. Powered by specialized AI subagents and Model Context Protocol (MCP) tool orchestration, it scans your projects for security vulnerabilities, checks LLM integrations against live specifications, and proposes AST-level refactoring—complete with an interactive git diff review engine and safety guards.
+`corys-dev` is an interactive Node.js/TypeScript developer CLI designed to audit and modernize local codebases. Powered by specialized AI subagents and Model Context Protocol (MCP) tool orchestration, it scans your projects for security vulnerabilities, checks LLM integrations against live model specifications from [models.dev](https://models.dev/models.json), and proposes code-quality refactoring—complete with an interactive unified diff review engine and Git safety guards.
 
 ---
 
@@ -11,7 +11,7 @@
 - **🔐 Security Subagent:** Scans for hardcoded secrets, API keys, credentials, and high-severity vulnerability patterns in codebase files and lockfiles.
 - **📦 Dependency & Model Audit Subagent:** Connects via MCP stdio to `models.dev` to audit active LLM model IDs, context windows, and feature deprecations.
 - **🛠 Refactoring Subagent:** Analyzes code quality, unhandled errors, and legacy patterns to generate automated rewrite proposals.
-- **🎨 Interactive Diff Engine:** Renders colored, side-by-side terminal diffs (`+ green` / `- red`) with options to apply changes, create an isolated Git feature branch, or skip proposals.
+- **🎨 Interactive Diff Engine:** Renders colored unified terminal diffs (`+ green` / `- red`) with options to apply changes, create an isolated Git feature branch, or skip proposals.
 - **🛡 Git Safety Pre-Check:** Automatically detects uncommitted changes before agents run, offering to `git stash` work or abort to prevent accidental overwrites.
 - **🔌 Multi-Provider Support:** Fully customizable via `.env` to work with OpenRouter, Anthropic, Google Vertex AI, or local LLM proxies (LiteLLM/Ollama).
 
@@ -75,9 +75,9 @@ corys-dev-cli supports seamless provider mapping via environment variables. Crea
 PROVIDER_NAME=openrouter
 
 # Endpoint & Key Config
-MODEL_PROVIDER_URL=[https://openrouter.ai/api](https://openrouter.ai/api)
+MODEL_PROVIDER_URL=https://openrouter.ai/api/v1
 MODEL_PROVIDER_KEY=sk-or-v1-your-openrouter-api-key
-MODEL_NAME=deepseek/deepseek-chat
+MODEL_NAME=anthropic/claude-sonnet-4
 ```
 
 ## Usage
@@ -111,6 +111,7 @@ Options:
   -v, --verbose               Enable verbose debug logging (default: false)
   -d, --dry-run               Preview subagent analysis without modifying files (default: false)
   -y, --auto-approve          Automatically apply suggested edits without prompting (default: false)
+  -o, --offline               Run heuristic audits without calling the Agent SDK (default: false)
   -h, --help                  Display help for command
 
 ```
@@ -125,7 +126,7 @@ npm run dev -- check --subagents security
 # Build TypeScript to dist/
 npm run build
 
-# Run TypeScript build + global relink
+# Run TypeScript build (used before publish; does not relink)
 npm run prepublishOnly
 ```
 
