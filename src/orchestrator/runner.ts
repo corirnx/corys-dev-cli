@@ -1,9 +1,10 @@
 import { ExecutionContext } from '../types/cli.js';
-import { AgentContext, SubagentResult } from '../types/agent.js';
+import { AgentContext, SubagentResult, CodeRewriteProposal } from '../types/agent.js';
 import { SecurityAgent } from '../subagents/security.js';
 import { DependencyAuditAgent } from '../subagents/deps.js';
 import { RefactorAgent } from '../subagents/refactor.js';
-import { createSpinner, logInfo, logSuccess, logError } from '../cli/ui.js';
+import { processProposalsInteractive } from '../git/reviewer.js';
+import { createSpinner, logInfo, logSuccess } from '../cli/ui.js';
 
 export async function runMaintenance(context: ExecutionContext): Promise<SubagentResult[]> {
     const results: SubagentResult[] = [];
@@ -41,20 +42,22 @@ export async function runMaintenance(context: ExecutionContext): Promise<Subagen
         results.push(res);
     }
 
-    if (context.options.verbose) {
-        console.log('\n--- Phase 2 Subagent Raw Results ---');
-        results.forEach(r => logInfo(`Agent [${r.agentName}]:`, r.summary));
-        console.log('-------------------------------------\n');
-    }
-
-    const failures = results.filter(r => r.status === 'failed' || (r.errors && r.errors.length > 0));
-    if (failures.length > 0) {
-        for (const f of failures) {
-            logError(`[${f.agentName}] ${f.summary}`);
-            if (f.errors) f.errors.forEach(e => logError(`  - ${e}`));
+    const allProposals: CodeRewriteProposal[] = [];
+    for (const res of results) {
+        if (res.proposals && res.proposals.length > 0) {
+            allProposals.push(...res.proposals);
         }
     }
 
-    logSuccess('Phase 2 Subagent execution finished.');
+    if (allProposals.length > 0) {
+        await processProposalsInteractive(allProposals, {
+            dryRun: context.options.dryRun,
+            autoApprove: context.options.autoApprove,
+            cwd: context.absolutePath,
+        });
+    } else {
+        logSuccess('No code modification proposals require interactive approval.');
+    }
+
     return results;
 }
