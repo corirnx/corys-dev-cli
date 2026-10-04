@@ -5,6 +5,7 @@ export interface CheckCommandOptions {
     verbose: boolean;
     dryRun: boolean;
     autoApprove: boolean;
+    offline: boolean;
 }
 
 export interface ExecutionContext {

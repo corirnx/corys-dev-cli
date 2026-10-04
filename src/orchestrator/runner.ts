@@ -1,32 +1,60 @@
 import { ExecutionContext } from '../types/cli.js';
-import { createSpinner, logInfo, logSuccess } from '../cli/ui.js';
+import { AgentContext, SubagentResult } from '../types/agent.js';
+import { SecurityAgent } from '../subagents/security.js';
+import { DependencyAuditAgent } from '../subagents/deps.js';
+import { RefactorAgent } from '../subagents/refactor.js';
+import { createSpinner, logInfo, logSuccess, logError } from '../cli/ui.js';
 
-export async function runMaintenance(context: ExecutionContext): Promise<void> {
-    const spinner = createSpinner('Initializing subagents context...');
-    spinner.start();
+export async function runMaintenance(context: ExecutionContext): Promise<SubagentResult[]> {
+    const results: SubagentResult[] = [];
+    const selected = context.options.subagents;
+    const runAll = selected.includes('all');
 
-    await new Promise(resolve => setTimeout(resolve, 800));
-    spinner.succeed('Target repository validated');
+    const agentContext: AgentContext = {
+        targetPath: context.absolutePath,
+        dryRun: context.options.dryRun,
+        verbose: context.options.verbose,
+        offline: context.options.offline,
+    };
+
+    if (runAll || selected.includes('security')) {
+        const spinner = createSpinner('[SECURITY] Running security & secrets audit...');
+        spinner.start();
+        const res = await new SecurityAgent().run(agentContext);
+        res.status === 'failed' ? spinner.fail('[SECURITY] Audit failed') : spinner.succeed('[SECURITY] Audit completed');
+        results.push(res);
+    }
+
+    if (runAll || selected.includes('deps')) {
+        const spinner = createSpinner('[DEPENDENCIES] Auditing lockfiles & models.dev...');
+        spinner.start();
+        const res = await new DependencyAuditAgent().run(agentContext);
+        res.status === 'failed' ? spinner.fail('[DEPENDENCIES] Audit failed') : spinner.succeed('[DEPENDENCIES] Audit completed');
+        results.push(res);
+    }
+
+    if (runAll || selected.includes('refactor')) {
+        const spinner = createSpinner('[REFACTOR] Analyzing AST and code quality...');
+        spinner.start();
+        const res = await new RefactorAgent().run(agentContext);
+        res.status === 'failed' ? spinner.fail('[REFACTOR] Analysis failed') : spinner.succeed('[REFACTOR] Analysis completed');
+        results.push(res);
+    }
 
     if (context.options.verbose) {
-        console.log('\n--- Debug Execution Context ---');
-        logInfo('Target Path:', context.absolutePath);
-        logInfo('Selected Subagents:', context.options.subagents.join(', '));
-        logInfo('Dry Run Mode:', String(context.options.dryRun));
-        logInfo('Auto Approve:', String(context.options.autoApprove));
-        console.log('-------------------------------\n');
+        console.log('\n--- Phase 2 Subagent Raw Results ---');
+        results.forEach(r => logInfo(`Agent [${r.agentName}]:`, r.summary));
+        console.log('-------------------------------------\n');
     }
 
-    const activeAgents = context.options.subagents.includes('all')
-        ? ['security', 'deps', 'refactor']
-        : context.options.subagents;
-
-    for (const agent of activeAgents) {
-        const agentSpinner = createSpinner(`[${agent.toUpperCase()}] Running audit phase...`);
-        agentSpinner.start();
-        await new Promise(resolve => setTimeout(resolve, 600));
-        agentSpinner.succeed(`[${agent.toUpperCase()}] Audit completed`);
+    const failures = results.filter(r => r.status === 'failed' || (r.errors && r.errors.length > 0));
+    if (failures.length > 0) {
+        for (const f of failures) {
+            logError(`[${f.agentName}] ${f.summary}`);
+            if (f.errors) f.errors.forEach(e => logError(`  - ${e}`));
+        }
     }
 
-    logSuccess('Phase 1 CLI routing completed successfully.');
+    logSuccess('Phase 2 Subagent execution finished.');
+    return results;
 }

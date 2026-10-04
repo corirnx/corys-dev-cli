@@ -17,6 +17,7 @@ export function registerCheckCommand(program: Command): void {
         .option('-v, --verbose', 'Enable verbose debug logging', false)
         .option('-d, --dry-run', 'Preview subagent analysis without modifying files', false)
         .option('-y, --auto-approve', 'Automatically apply suggested edits without prompting', false)
+        .option('-o, --offline', 'Run heuristic audits without calling the Agent SDK (no API key required)', false)
         .action(async (repoPath: string, options) => {
             try {
                 printBanner();
@@ -29,7 +30,8 @@ export function registerCheckCommand(program: Command): void {
                         subagents: options.subagents as SubagentType[],
                         verbose: Boolean(options.verbose),
                         dryRun: Boolean(options.dryRun),
-                        autoApprove: Boolean(options.autoApprove)
+                        autoApprove: Boolean(options.autoApprove),
+                        offline: Boolean(options.offline)
                     }
                 });
             } catch (err) {
