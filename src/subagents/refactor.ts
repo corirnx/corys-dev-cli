@@ -1,6 +1,5 @@
 import { BaseSubagent } from './base.js';
 import { AgentContext, SubagentResult, CodeRewriteProposal } from '../types/agent.js';
-import { queryAgent } from '../orchestrator/agent-sdk.js';
 
 export class RefactorAgent extends BaseSubagent {
     readonly name = 'Refactor' as const;
@@ -15,9 +14,8 @@ export class RefactorAgent extends BaseSubagent {
                 };
             }
 
-            const rawResult = await queryAgent({
+            const rawResult = await this.queryAgentWithIgnore(context, {
                 prompt: `Analyze source files under ${context.targetPath}/src for legacy code patterns such as callbacks/raw promise chains, missing error handling, or verbose repetition. If refactoring is required, return JSON: {"proposals": [{"filePath": string, "originalCode": string, "proposedCode": string, "reasoning": string}]}. If nothing needs changing, return {"proposals": []}.`,
-                cwd: context.targetPath,
                 allowedTools: ['Glob', 'Grep', 'Read'],
             });
 

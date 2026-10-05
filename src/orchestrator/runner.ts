@@ -5,7 +5,8 @@ import { SecurityAgent } from '../subagents/security.js';
 import { DependencyAuditAgent } from '../subagents/deps.js';
 import { RefactorAgent } from '../subagents/refactor.js';
 import { processProposalsInteractive } from '../git/reviewer.js';
-import { createSpinner, logSuccess } from '../cli/ui.js';
+import { ensureDefaultCorysIgnore } from '../utils/ignore.js';
+import { createSpinner, logSuccess, logInfo } from '../cli/ui.js';
 
 export async function runMaintenance(context: ExecutionContext): Promise<SubagentResult[]> {
     const readyToProceed = await ensureCleanGitState(context.absolutePath, {
@@ -15,6 +16,13 @@ export async function runMaintenance(context: ExecutionContext): Promise<Subagen
 
     if (!readyToProceed) {
         return [];
+    }
+
+    const created = context.options.dryRun
+        ? null
+        : await ensureDefaultCorysIgnore(context.absolutePath);
+    if (created) {
+        logInfo('Created', `${created} (default ignore file)`);
     }
 
     const results: SubagentResult[] = [];

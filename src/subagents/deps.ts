@@ -2,7 +2,6 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { BaseSubagent } from './base.js';
 import { AgentContext, SubagentResult } from '../types/agent.js';
-import { queryAgent } from '../orchestrator/agent-sdk.js';
 
 export class DependencyAuditAgent extends BaseSubagent {
     readonly name = 'DependencyAudit' as const;
@@ -24,9 +23,8 @@ export class DependencyAuditAgent extends BaseSubagent {
 
             if (!context.offline) {
                 const modelIds = this.extractModelIds(context.targetPath, pkgText ?? '');
-                const agentSummary = await queryAgent({
+                const agentSummary = await this.queryAgentWithIgnore(context, {
                     prompt: `Audit dependencies and LLM model IDs in ${context.targetPath}. Known model IDs in codebase: ${modelIds.join(', ') || 'none'}. Use the models-dev MCP server get_model_specs tool to verify each model ID and flag deprecated or unknown ones. Inspect package.json for outdated or suspicious packages. Return a concise JSON summary: {"findings": string[], "recommendations": string[]}.`,
-                    cwd: context.targetPath,
                     allowedTools: ['Read', 'Glob', 'Grep'],
                 });
                 findings.push(`Agent review: ${agentSummary.slice(0, 800)}`);

@@ -2,7 +2,6 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { BaseSubagent } from './base.js';
 import { AgentContext, SubagentResult } from '../types/agent.js';
-import { queryAgent } from '../orchestrator/agent-sdk.js';
 
 const SENSITIVE_PATTERNS = [
     /['"]?(?:api[_-]?key|apikey|api_secret|secret[_-]?key|password|token|jwt)['"]?\s*[:=]\s*['"][A-Za-z0-9_\-]{16,}['"]/gi,
@@ -22,11 +21,10 @@ export class SecurityAgent extends BaseSubagent {
             findings.push(...(await this.auditLockfiles(context.targetPath)));
 
             if (!context.offline) {
-                const agentSummary = await queryAgent({
-                    prompt: `Perform a strict security audit on ${context.targetPath}. Look for hardcoded secrets, insecure dependencies, and leaked credentials. Return a concise JSON summary: {"findings": string[], "hasCritical": boolean}.`,
-                    cwd: context.targetPath,
-                    allowedTools: ['Glob', 'Grep', 'Read'],
-                });
+                const agentSummary = await this.queryAgentWithIgnore(context, {
+                                prompt: `Perform a strict security audit on ${context.targetPath}. Look for hardcoded secrets, insecure dependencies, and leaked credentials. Return a concise JSON summary: {"findings": string[], "hasCritical": boolean}.`,
+                                allowedTools: ['Glob', 'Grep', 'Read'],
+                            });
                 findings.push(`Agent review: ${agentSummary.slice(0, 800)}`);
             }
 
