@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import path from 'node:path';
-import { SubagentType } from '../../types/cli.js';
+import { SubagentType, ReportFormat } from '../../types/cli.js';
 import { runMaintenance } from '../../orchestrator/runner.js';
 import { printBanner, logError } from '../ui.js';
 
@@ -18,11 +18,14 @@ export function registerCheckCommand(program: Command): void {
         .option('-d, --dry-run', 'Preview subagent analysis without modifying files', false)
         .option('-y, --auto-approve', 'Automatically apply suggested edits without prompting', false)
         .option('-o, --offline', 'Run heuristic audits without calling the Agent SDK (no API key required)', false)
+        .option('-f, --format <format>', 'Export audit report as markdown, json, or html', '')
+        .option('--output <filePath>', 'File path to write the audit report to', '')
         .action(async (repoPath: string, options) => {
             try {
                 printBanner();
                 const absolutePath = path.resolve(process.cwd(), repoPath);
 
+                const format = options.format as string;
                 await runMaintenance({
                     targetDir: repoPath,
                     absolutePath,
@@ -31,7 +34,9 @@ export function registerCheckCommand(program: Command): void {
                         verbose: Boolean(options.verbose),
                         dryRun: Boolean(options.dryRun),
                         autoApprove: Boolean(options.autoApprove),
-                        offline: Boolean(options.offline)
+                        offline: Boolean(options.offline),
+                        ...(format ? { format: validateReportFormat(format) } : {}),
+                        ...(options.output ? { output: options.output as string } : {})
                     }
                 });
             } catch (err) {
@@ -39,4 +44,11 @@ export function registerCheckCommand(program: Command): void {
                 process.exit(1);
             }
         });
+}
+
+function validateReportFormat(value: string): ReportFormat {
+    if (value === 'markdown' || value === 'json' || value === 'html') {
+        return value;
+    }
+    throw new Error(`Invalid report format "${value}". Expected one of: markdown, json, html.`);
 }

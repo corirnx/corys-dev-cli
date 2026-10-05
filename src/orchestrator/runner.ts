@@ -6,6 +6,7 @@ import { DependencyAuditAgent } from '../subagents/deps.js';
 import { RefactorAgent } from '../subagents/refactor.js';
 import { processProposalsInteractive } from '../git/reviewer.js';
 import { ensureDefaultCorysIgnore } from '../utils/ignore.js';
+import { saveAuditReport } from '../reports/generator.js';
 import { createSpinner, logSuccess, logInfo } from '../cli/ui.js';
 
 export async function runMaintenance(context: ExecutionContext): Promise<SubagentResult[]> {
@@ -65,6 +66,12 @@ export async function runMaintenance(context: ExecutionContext): Promise<Subagen
         if (res.proposals && res.proposals.length > 0) {
             allProposals.push(...res.proposals);
         }
+    }
+
+    // Export a structured audit report when the user opted in via --format or --output.
+    const { format, output } = context.options;
+    if (format || output) {
+        await saveAuditReport(results, format ?? 'markdown', output);
     }
 
     if (allProposals.length > 0) {

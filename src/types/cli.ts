@@ -1,11 +1,15 @@
 export type SubagentType = 'security' | 'deps' | 'refactor' | 'all';
 
+export type ReportFormat = 'markdown' | 'json' | 'html';
+
 export interface CheckCommandOptions {
     subagents: SubagentType[];
     verbose: boolean;
     dryRun: boolean;
     autoApprove: boolean;
     offline: boolean;
+    format?: ReportFormat;
+    output?: string;
 }
 
 export interface ExecutionContext {
