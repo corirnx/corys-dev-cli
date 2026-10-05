@@ -12,6 +12,7 @@
 - **📦 Dependency & Model Audit Subagent:** Connects via MCP stdio to `models.dev` to audit active LLM model IDs, context windows, and feature deprecations.
 - **🛠 Refactoring Subagent:** Analyzes code quality, unhandled errors, and legacy patterns to generate automated rewrite proposals.
 - **🎨 Interactive Diff Engine:** Renders colored unified terminal diffs (`+ green` / `- red`) with options to apply changes, create an isolated Git feature branch, or skip proposals.
+- **📄 Structured Audit Reports:** Export audit summaries, security findings, model deprecation notices, and refactoring proposals to persistent files in **Markdown**, **JSON**, or **HTML** via `--format` / `--output`.
 - **🛡 Git Safety Pre-Check:** Automatically detects uncommitted changes before agents run, offering to `git stash` work or abort to prevent accidental overwrites.
 - **🙈 Ignore Rules (`.corysignore`):** Fine-grained control over which paths the subagents' tools touch. Rules from `.gitignore` and `.corysignore` are honored automatically, and a default `.corysignore` template is created in each target repo.
 - **🔌 Multi-Provider Support:** Fully customizable via `.env` to work with OpenRouter, Anthropic, Google Vertex AI, or local LLM proxies (LiteLLM/Ollama).
@@ -52,21 +53,50 @@
 
 
 ## Installation
+
+> 👉 Installing the CLI correctly matters: the steps below link the compiled `corys-dev` binary so you can run it from anywhere. You only need to repeat the *last* step after pulling updates.
+
 ### Prerequisites
 - Node.js: >=18.0.0
 - Git installed and available in PATH.
 
-### Global Setup (Local Linking)
-Clone and link the binary globally on your machine:
+### 1. Clone the repository
 ```bash
 git clone [https://github.com/your-username/corys-dev-cli.git](https://github.com/your-username/corys-dev-cli.git)
 cd corys-dev-cli
-npm install
-npm run build
-npm link
 ```
 
-Verify installation: `corys-dev --help`
+### 2. Install dependencies
+```bash
+npm install
+```
+
+### 3. Build the TypeScript output
+```bash
+npm run build
+```
+Compiles the source `src/` into `dist/` and makes `dist/index.js` executable.
+
+### 4. Link the binary globally (`npm link`)
+```bash
+npm link
+```
+This symlinks `corys-dev` into your global `node_modules/.bin/` so the command is available in any terminal.
+
+### 5. Verify
+```bash
+corys-dev --help
+```
+
+### Updating to a newer version
+Pull the latest changes and rebuild — the global link persists, so no re-link is needed:
+
+```bash
+git pull
+npm run build
+```
+
+> **Note on `npm link`:** it only needs to be re-run if the global symlink breaks (e.g. the repo folder was moved/renamed, `node_modules` was deleted, or `npm install` was re-run and removed the link). You do **not** need to link again just because the code changed.
 
 ## Configuration
 corys-dev-cli supports seamless provider mapping via environment variables. Create a .env file in your repository or global execution environment:
@@ -131,9 +161,32 @@ Options:
   -d, --dry-run               Preview subagent analysis without modifying files (default: false)
   -y, --auto-approve          Automatically apply suggested edits without prompting (default: false)
   -o, --offline               Run heuristic audits without calling the Agent SDK (default: false)
+  -f, --format <format>       Export audit report as markdown, json, or html (default: "")
+  --output <filePath>         File path to write the audit report to (default: "")
   -h, --help                  Display help for command
 
 ```
+
+### Exporting Audit Reports
+Persist audit results — security findings, model deprecation notices, and refactoring proposals — to a report file. Use `--format` to pick `markdown`, `json`, or `html`, and `--output` to set the file path (parent folders are created automatically).
+
+Reports are generated **only** when you pass `--format`, `--output`, or both:
+
+```bash
+# Markdown report (default filename: corys-audit-report.md in cwd)
+corys-dev check --format markdown
+
+# JSON to a specific file
+corys-dev check --subagents security deps --format json --output reports/audit.json
+
+# Self-contained HTML report in a subfolder
+corys-dev check --format html --output reports/audit.html
+
+# Default to markdown if only --output is given
+corys-dev check --output audit.md
+```
+
+Each report includes the generated timestamp and per-subagent status (passed / findings / failed), plus the full summaries, security findings, model deprecation notices, and rewrite proposals for the subagents you ran.
 
 ## Development Workflow
 When modifying or extending corys-dev-cli:
