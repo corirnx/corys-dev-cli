@@ -2,7 +2,7 @@
 
 > Personal multi-agent CLI tool for automated repository maintenance, security auditing, dependency/model checks, and code refactoring.
 
-`corys-dev` is an interactive Node.js/TypeScript developer CLI designed to audit and modernize local codebases. Powered by specialized AI subagents and Model Context Protocol (MCP) tool orchestration, it scans your projects for security vulnerabilities, checks LLM integrations against live model specifications from [models.dev](https://models.dev/models.json), and proposes code-quality refactoring—complete with an interactive unified diff review engine and Git safety guards.
+`corys-dev` is an interactive Node.js/TypeScript CLI that audits and modernizes local codebases via specialized AI subagents, live [models.dev](https://models.dev/models.json) lookups, and MCP tool orchestration.
 
 ---
 
@@ -54,49 +54,28 @@
 
 ## Installation
 
-> 👉 Installing the CLI correctly matters: the steps below link the compiled `corys-dev` binary so you can run it from anywhere. You only need to repeat the *last* step after pulling updates.
-
 ### Prerequisites
 - Node.js: >=18.0.0
 - Git installed and available in PATH.
 
-### 1. Clone the repository
+### Steps
 ```bash
 git clone [https://github.com/your-username/corys-dev-cli.git](https://github.com/your-username/corys-dev-cli.git)
 cd corys-dev-cli
-```
-
-### 2. Install dependencies
-```bash
 npm install
+npm run build   # compiles src/ into dist/ and makes dist/index.js executable
+npm link        # adds the global corys-dev command
 ```
 
-### 3. Build the TypeScript output
-```bash
-npm run build
-```
-Compiles the source `src/` into `dist/` and makes `dist/index.js` executable.
+Verify installation: `corys-dev --help`
 
-### 4. Link the binary globally (`npm link`)
-```bash
-npm link
-```
-This symlinks `corys-dev` into your global `node_modules/.bin/` so the command is available in any terminal.
-
-### 5. Verify
-```bash
-corys-dev --help
-```
-
-### Updating to a newer version
-Pull the latest changes and rebuild — the global link persists, so no re-link is needed:
-
+### Updating
+After pulling changes, just rebuild — the `npm link` symlink persists:
 ```bash
 git pull
 npm run build
 ```
-
-> **Note on `npm link`:** it only needs to be re-run if the global symlink breaks (e.g. the repo folder was moved/renamed, `node_modules` was deleted, or `npm install` was re-run and removed the link). You do **not** need to link again just because the code changed.
+Re-run `npm link` only if the link breaks (repo folder moved/renamed, `node_modules` deleted, or `npm install` cleared it). Code changes never require re-linking.
 
 ## Configuration
 corys-dev-cli supports seamless provider mapping via environment variables. Create a .env file in your repository or global execution environment:
@@ -168,25 +147,27 @@ Options:
 ```
 
 ### Exporting Audit Reports
-Persist audit results — security findings, model deprecation notices, and refactoring proposals — to a report file. Use `--format` to pick `markdown`, `json`, or `html`, and `--output` to set the file path (parent folders are created automatically).
-
-Reports are generated **only** when you pass `--format`, `--output`, or both:
+Persist audit results — security findings, model deprecation notices, and refactoring proposals — to a file. Reports are generated **only** when you pass `--format`, `--output`, or both:
 
 ```bash
-# Markdown report (default filename: corys-audit-report.md in cwd)
+# Markdown (default filename corys-audit-report.md in cwd)
 corys-dev check --format markdown
 
-# JSON to a specific file
+# JSON to a specific file (parent folders are created automatically)
 corys-dev check --subagents security deps --format json --output reports/audit.json
-
-# Self-contained HTML report in a subfolder
-corys-dev check --format html --output reports/audit.html
-
-# Default to markdown if only --output is given
-corys-dev check --output audit.md
 ```
 
-Each report includes the generated timestamp and per-subagent status (passed / findings / failed), plus the full summaries, security findings, model deprecation notices, and rewrite proposals for the subagents you ran.
+Each format serves a different use:
+
+| Format | Best for |
+|--------|----------|
+| `markdown` | Human-readable summary of all results |
+| `json` | Machine-readable metrics & structured findings (CI pipelines) |
+| `html` | A styled, self-contained report openable in a browser |
+
+Every report includes the generated timestamp and per-subagent status (`passed` / `findings found` / `failed`), plus full summaries, findings, deprecation notices, and rewrite proposals.
+
+For headless/CI runs, pair `--offline` (heuristics only, no API key required) with `-y` (auto-approve) or `-d` (dry-run) to avoid interactive prompts.
 
 ## Development Workflow
 When modifying or extending corys-dev-cli:
