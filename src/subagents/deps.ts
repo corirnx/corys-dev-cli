@@ -22,7 +22,7 @@ export class DependencyAuditAgent extends BaseSubagent {
             }
 
             if (!context.offline) {
-                const modelIds = this.extractModelIds(context.targetPath, pkgText ?? '');
+                const modelIds = this.extractModelIds(pkgText ?? '');
                 const agentSummary = await this.queryAgentWithIgnore(context, {
                     prompt: `Audit dependencies and LLM model IDs in ${context.targetPath}. Known model IDs in codebase: ${modelIds.join(', ') || 'none'}. Use the models-dev MCP server get_model_specs tool to verify each model ID and flag deprecated or unknown ones. Inspect package.json for outdated or suspicious packages. Return a concise JSON summary: {"findings": string[], "recommendations": string[]}.`,
                     allowedTools: ['Read', 'Glob', 'Grep'],
@@ -37,7 +37,6 @@ export class DependencyAuditAgent extends BaseSubagent {
                 summary: hasFindings
                     ? `Found ${findings.length} dependency/model concern(s).`
                     : 'Dependencies and model references look clean.',
-                errors: hasFindings ? findings : undefined,
             };
         } catch (err) {
             return {
@@ -49,7 +48,7 @@ export class DependencyAuditAgent extends BaseSubagent {
         }
     }
 
-    private extractModelIds(_targetPath: string, pkgText: string): string[] {
+    private extractModelIds(pkgText: string): string[] {
         const ids = new Set<string>();
         const pattern = /['"](?:claude|gpt|gemini|sonnet|opus|haiku)[a-z0-9-/.]*['"]/gi;
         const matches = pkgText.match(pattern) ?? [];

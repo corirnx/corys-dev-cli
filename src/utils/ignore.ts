@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import ignore, { Ignore } from 'ignore';
 
 const DEFAULT_IGNORES = [
     'node_modules/',
@@ -65,37 +64,4 @@ export async function buildCombinedIgnoreDocument(cwd: string): Promise<string> 
     }
 
     return sections.join('\n');
-}
-
-export function getRepositoryFilter(cwd: string): Ignore {
-    const ig = ignore().add(DEFAULT_IGNORES);
-
-    // Read .gitignore if present
-    const gitignorePath = path.resolve(cwd, '.gitignore');
-    if (fs.existsSync(gitignorePath)) {
-        try {
-            const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
-            ig.add(gitignoreContent);
-        } catch {
-            // Gracefully handle unreadable files
-        }
-    }
-
-    // Read .corysignore if present (overrides/supplements .gitignore)
-    const corysignorePath = path.resolve(cwd, '.corysignore');
-    if (fs.existsSync(corysignorePath)) {
-        try {
-            const corysignoreContent = fs.readFileSync(corysignorePath, 'utf-8');
-            ig.add(corysignoreContent);
-        } catch {
-            // Gracefully handle unreadable files
-        }
-    }
-
-    return ig;
-}
-
-export function filterTargetFiles(files: string[], cwd: string): string[] {
-    const filter = getRepositoryFilter(cwd);
-    return filter.filter(files);
 }

@@ -15,7 +15,5 @@ export interface SubagentResult {
 
 export interface AgentContext {
     targetPath: string;
-    dryRun: boolean;
-    verbose: boolean;
     offline: boolean;
 }

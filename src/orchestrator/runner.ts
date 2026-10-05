@@ -32,8 +32,6 @@ export async function runMaintenance(context: ExecutionContext): Promise<Subagen
 
     const agentContext: AgentContext = {
         targetPath: context.absolutePath,
-        dryRun: context.options.dryRun,
-        verbose: context.options.verbose,
         offline: context.options.offline,
     };
 
