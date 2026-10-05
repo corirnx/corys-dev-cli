@@ -13,6 +13,7 @@
 - **🛠 Refactoring Subagent:** Analyzes code quality, unhandled errors, and legacy patterns to generate automated rewrite proposals.
 - **🎨 Interactive Diff Engine:** Renders colored unified terminal diffs (`+ green` / `- red`) with options to apply changes, create an isolated Git feature branch, or skip proposals.
 - **🛡 Git Safety Pre-Check:** Automatically detects uncommitted changes before agents run, offering to `git stash` work or abort to prevent accidental overwrites.
+- **🙈 Ignore Rules (`.corysignore`):** Fine-grained control over which paths the subagents' tools touch. Rules from `.gitignore` and `.corysignore` are honored automatically, and a default `.corysignore` template is created in each target repo.
 - **🔌 Multi-Provider Support:** Fully customizable via `.env` to work with OpenRouter, Anthropic, Google Vertex AI, or local LLM proxies (LiteLLM/Ollama).
 
 ---
@@ -79,6 +80,24 @@ MODEL_PROVIDER_URL=https://openrouter.ai/api/v1
 MODEL_PROVIDER_KEY=sk-or-v1-your-openrouter-api-key
 MODEL_NAME=anthropic/claude-sonnet-4
 ```
+
+## Ignore Rules (`.corysignore`)
+Control which paths the subagents (and their `Grep`/`Glob`/`Read` tools) touch. Ignore rules follow `.gitignore` syntax and are layered from three sources:
+
+1. **Built-in defaults** — always excluded: `node_modules/`, `dist/`, `build/`, `.git/`, `coverage/`, minified assets, and common lockfiles.
+2. **`.gitignore`** — read from the target repository when present.
+3. **`.corysignore`** — optional per-repository override/supplement.
+
+When you run `corys-dev check` against a repo without a `.corysignore`, a commented template is created automatically so you have an obvious place for fine-grained rules (skipped in `--dry-run`). Add entries exactly as you would in `.gitignore`:
+
+```text
+# .corysignore
+docs/            # skip the whole docs folder
+src/generated/   # skip generated code
+*.snap           # skip snapshot files
+```
+
+Because `.gitignore`, `.corysignore`, and the built-in defaults are combined, you only list rules **beyond** what `.gitignore` already excludes. Layered ignore rules are applied to the Agent SDK's tool calls for the duration of each audit, so secrets or legacy code in ignored paths won't be flagged or rewritten.
 
 ## Usage
 ### Run All Maintenance Checks
