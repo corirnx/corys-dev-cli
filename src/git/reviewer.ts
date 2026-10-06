@@ -2,7 +2,7 @@ import { select } from '@inquirer/prompts';
 import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import chalk from 'chalk';
 import { CodeRewriteProposal } from '../types/agent.js';
 import { renderProposalDiff, printProposalHeader } from '../cli/diff-viewer.js';
@@ -82,9 +82,9 @@ async function applyOnBranch(proposal: CodeRewriteProposal, cwd?: string): Promi
 
     try {
         const relativePath = path.relative(gitRoot, resolvedPath);
-        execSync('git checkout -b ' + branchName, { cwd: gitRoot, stdio: 'ignore' });
-        execSync('git add ' + relativePath, { cwd: gitRoot, stdio: 'ignore' });
-        execSync('git commit -m ' + JSON.stringify(`refactor(corys-dev): ${proposal.reasoning.slice(0, 60)}`), { cwd: gitRoot, stdio: 'ignore' });
+        execFileSync('git', ['checkout', '-b', branchName], { cwd: gitRoot, stdio: 'ignore' });
+        execFileSync('git', ['add', relativePath], { cwd: gitRoot, stdio: 'ignore' });
+        execFileSync('git', ['commit', '-m', `refactor(corys-dev): ${proposal.reasoning.slice(0, 60)}`], { cwd: gitRoot, stdio: 'ignore' });
         logSuccess(`Created branch ${branchName} and committed changes.`);
     } catch (err) {
         logError(`Git branch creation failed for ${proposal.filePath}. File was updated locally.`);

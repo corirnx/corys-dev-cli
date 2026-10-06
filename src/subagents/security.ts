@@ -5,10 +5,10 @@ import { AgentContext, SubagentResult } from '../types/agent.js';
 
 const SENSITIVE_PATTERNS = [
     /['"]?(?:api[_-]?key|apikey|api_secret|secret[_-]?key|password|token|jwt)['"]?\s*[:=]\s*['"][A-Za-z0-9_\-]{16,}['"]/gi,
-    /-----BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY-----/,
+    /^-----BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY-----/gm,
     /AKIA[0-9A-Z]{16}/,
-    /ghp_[A-Za-z0-9]{36}/,
-    /glpat-[A-Za-z0-9_\-]{20}/,
+    /(?:gh[psor]_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,})/g,
+    /glpat-[A-Za-z0-9_\-]{20,}/g,
 ];
 
 export class SecurityAgent extends BaseSubagent {
@@ -59,6 +59,7 @@ export class SecurityAgent extends BaseSubagent {
             const text = await readFile(fullPath, 'utf-8').catch(() => null);
             if (!text) continue;
             for (const pattern of SENSITIVE_PATTERNS) {
+                pattern.lastIndex = 0;
                 const matches = text.match(pattern);
                 if (matches) {
                     findings.push(`Possible secret in ${fullPath}: ${matches[0].slice(0, 80)}`);

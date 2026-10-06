@@ -44,7 +44,17 @@ export function loadAndMapEnvironment(cwd: string = process.cwd()): void {
             if (modelName) process.env.ANTHROPIC_MODEL = modelName;
             break;
 
-        default:
-            console.warn(`[WARN] Unknown PROVIDER_NAME "${provider}". Falling back to default SDK settings.`);
+        default: {
+            const valid = ['anthropic', 'openrouter', 'vertexai', 'custom'];
+            console.warn(
+                `[WARN] Unknown PROVIDER_NAME "${provider}". ` +
+                `Valid values are: ${valid.join(', ')}. ` +
+                `Falling back to anthropic configuration.`
+            );
+            if (baseUrl) process.env.ANTHROPIC_BASE_URL = baseUrl;
+            process.env.ANTHROPIC_API_KEY = apiKey;
+            if (modelName) process.env.ANTHROPIC_MODEL = modelName;
+            break;
+        }
     }
 }
