@@ -4,7 +4,6 @@ export type ReportFormat = 'markdown' | 'json' | 'html';
 
 export interface CheckCommandOptions {
     subagents: SubagentType[];
-    verbose: boolean;
     dryRun: boolean;
     autoApprove: boolean;
     offline: boolean;
