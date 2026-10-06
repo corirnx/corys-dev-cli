@@ -1,5 +1,6 @@
 import { select } from '@inquirer/prompts';
 import fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 import chalk from 'chalk';
@@ -94,14 +95,10 @@ function findGitRoot(startDir: string): string | undefined {
     let current = startDir;
     for (let i = 0; i < 50; i++) {
         const gitPath = path.join(current, '.git');
-        if (existsSyncSafe(gitPath)) return current;
+        if (existsSync(gitPath)) return current;
         const parent = path.dirname(current);
         if (parent === current) break;
         current = parent;
     }
     return undefined;
-}
-
-function existsSyncSafe(filePath: string): boolean {
-    return fs.access(filePath).then(() => true).catch(() => false) as unknown as boolean;
 }
