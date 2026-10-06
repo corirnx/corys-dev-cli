@@ -136,7 +136,6 @@ Arguments:
 
 Options:
   -s, --subagents <types...>  Specify subagents to execute (security, deps, refactor, all) (default: ["all"])
-  -v, --verbose               Enable verbose debug logging (default: false)
   -d, --dry-run               Preview subagent analysis without modifying files (default: false)
   -y, --auto-approve          Automatically apply suggested edits without prompting (default: false)
   -o, --offline               Run heuristic audits without calling the Agent SDK (default: false)

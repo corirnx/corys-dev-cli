@@ -14,7 +14,6 @@ export function registerCheckCommand(program: Command): void {
             'Specify subagents to execute (security, deps, refactor, all)',
             ['all']
         )
-        .option('-v, --verbose', 'Enable verbose debug logging', false)
         .option('-d, --dry-run', 'Preview subagent analysis without modifying files', false)
         .option('-y, --auto-approve', 'Automatically apply suggested edits without prompting', false)
         .option('-o, --offline', 'Run heuristic audits without calling the Agent SDK (no API key required)', false)
@@ -31,7 +30,6 @@ export function registerCheckCommand(program: Command): void {
                     absolutePath,
                     options: {
                         subagents: options.subagents as SubagentType[],
-                        verbose: Boolean(options.verbose),
                         dryRun: Boolean(options.dryRun),
                         autoApprove: Boolean(options.autoApprove),
                         offline: Boolean(options.offline),
