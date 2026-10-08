@@ -209,5 +209,4 @@ Tests cover the pure logic (risk summaries, ignore rules, report generators, rep
 
 ---
 
-License
-MIT © Corinna Rohr
+**License:** This project is licensed under the AGPL-3.0 License — see the [`LICENSE`](./LICENSE) file for details. Provided as-is with no warranties.

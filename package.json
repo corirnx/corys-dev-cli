@@ -1,5 +1,11 @@
 {
   "name": "corys-dev-cli",
+  "author": "Corinna Rohr <annirocrhor@gmail.com>, https://github.com/corirnx",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/corirnx/corys-dev-cli"
+  },
   "version": "1.0.0",
   "description": "Cory's personal developer CLI for multi-agent repository maintenance and audits",
   "type": "module",
