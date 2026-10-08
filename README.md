@@ -4,6 +4,8 @@
 
 `corys-dev` is an interactive Node.js/TypeScript CLI that audits and modernizes local codebases via specialized AI subagents, live [models.dev](https://models.dev/models.json) lookups, and MCP tool orchestration.
 
+> **Showcase project:** built as the capstone for the [AI Engineering with Claude](https://www.udacity.com/) program from Udacity, combining applied learning with the real-world pain point of package & dependency maintenance.
+
 ---
 
 ## Features
@@ -70,12 +72,12 @@ npm link        # adds the global corys-dev command
 Verify installation: `corys-dev --help`
 
 ### Updating
-After pulling changes, just rebuild — the `npm link` symlink persists:
+After pulling changes, just rebuild — the `npm link` symlink persists, so code changes never require re-linking:
 ```bash
 git pull
 npm run build
 ```
-Re-run `npm link` only if the link breaks (repo folder moved/renamed, `node_modules` deleted, or `npm install` cleared it). Code changes never require re-linking.
+Re-run `npm link` only if the link itself breaks (repo moved/renamed, `node_modules` deleted, or `npm install` cleared it).
 
 ## Configuration
 corys-dev-cli supports seamless provider mapping via environment variables. Create a .env file in your repository or global execution environment:
@@ -106,7 +108,7 @@ src/generated/   # skip generated code
 *.snap           # skip snapshot files
 ```
 
-Because `.gitignore`, `.corysignore`, and the built-in defaults are combined, you only list rules **beyond** what `.gitignore` already excludes. Layered ignore rules are applied to the Agent SDK's tool calls for the duration of each audit, so secrets or legacy code in ignored paths won't be flagged or rewritten.
+Because `.gitignore`, `.corysignore`, and the built-in defaults are combined, you only need to list rules **beyond** what `.gitignore` already excludes. The combined rules are applied to the Agent SDK's tool calls for the duration of each audit, so ignored paths won't be flagged or rewritten.
 
 ## Usage
 ### Run All Maintenance Checks
@@ -164,27 +166,9 @@ Each format serves a different use:
 | `json` | Machine-readable metrics & structured findings (CI pipelines) |
 | `html` | A styled, self-contained report openable in a browser |
 
-Each report includes run metadata (target path, git branch/commit, subagents run, offline/dry-run mode, per-subagent duration) plus, per subagent, its status, summary, **risk assessment**, severity-tagged **findings** (with type, severity, and location), and rewrite proposals. To add it to your `.gitignore`/`.corysignore` or commit it, simply keep the generated file.
+Each report includes run metadata (target path, git branch/commit, subagents run, offline/dry-run mode, per-subagent duration) plus, per subagent, its status, summary, **risk assessment**, severity-tagged **findings** (type, severity, location), and rewrite proposals.
 
-Here is an example of what a Markdown report section looks like:
-
-```text
-### Security Agent
-**Status:** `findings_found`
-**Summary:**
-Found 4 security concern(s).
-
-**Risk assessment:** Low-risk posture: no urgent action required. Found 4 finding(s) (0 high, 0 medium, 4 low) across 1 category(ies).
-
-#### Findings (4)
-
-**By type:** dependency (4)
-**By severity:** low (4)
-
-- **[low]** `dependency` `package.json`: Suspicious dependency name: @anthropic-ai/claude-agent-sdk
-```
-
-Reports are generated **only** when you pass `--format`, `--output`, or both. For headless/CI runs, pair `--offline` (heuristics only, no API key required) with `-y` (auto-approve) or `-d` (dry-run) to avoid interactive prompts.
+For headless/CI runs, pair `--offline` (heuristics only, no API key required) with `-y` (auto-approve) or `-d` (dry-run) to avoid interactive prompts.
 
 ## Development Workflow
 When modifying or extending corys-dev-cli:
