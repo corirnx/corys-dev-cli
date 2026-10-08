@@ -64,7 +64,7 @@ describe('loadAndMapEnvironment', () => {
     it('falls back to anthropic config for unknown provider', () => {
         process.env.PROVIDER_NAME = 'bogus';
         process.env.ANTHROPIC_API_KEY = 'fallback-key';
-        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => { });
         loadAndMapEnvironment('/some/dir');
         expect(process.env.ANTHROPIC_API_KEY).toBe('fallback-key');
         expect(warn).toHaveBeenCalled();

@@ -3,38 +3,38 @@ import { ReportMeta } from '../types/cli.js';
 import { createTwoFilesPatch } from 'diff';
 
 function escapeHtml(text: string): string {
-    return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function normalizeTrailingNewline(text: string): string {
-    return text.endsWith('\n') ? text : text + '\n';
+  return text.endsWith('\n') ? text : text + '\n';
 }
 
 function renderProposalDiffHtml(original: string, proposed: string): string {
-    const patch = createTwoFilesPatch('original', 'proposed', normalizeTrailingNewline(original), normalizeTrailingNewline(proposed));
-    return escapeHtml(patch);
+  const patch = createTwoFilesPatch('original', 'proposed', normalizeTrailingNewline(original), normalizeTrailingNewline(proposed));
+  return escapeHtml(patch);
 }
 
 function statusBadgeClass(status: SubagentResult['status']): string {
-    switch (status) {
-        case 'passed':
-            return 'bg-green-100 text-green-800';
-        case 'failed':
-            return 'bg-red-100 text-red-800';
-        default:
-            return 'bg-yellow-100 text-yellow-800';
-    }
+  switch (status) {
+    case 'passed':
+      return 'bg-green-100 text-green-800';
+    case 'failed':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-yellow-100 text-yellow-800';
+  }
 }
 
 export function generateHtmlReport(results: SubagentResult[], meta: ReportMeta): string {
-    const timestamp = new Date().toLocaleString();
+  const timestamp = new Date().toLocaleString();
 
-    const metaHtml = `
+  const metaHtml = `
       <div class="text-sm text-gray-500 mb-4 space-y-1">
         <p><strong>Target:</strong> <code>${escapeHtml(meta.targetDir)}</code></p>
         <p><strong>Absolute path:</strong> <code>${escapeHtml(meta.targetPath)}</code></p>
@@ -44,27 +44,27 @@ export function generateHtmlReport(results: SubagentResult[], meta: ReportMeta):
         <p><strong>Mode:</strong> ${meta.offline ? 'offline (heuristics)' : 'online (AI agent)'}${meta.dryRun ? ' / dry-run' : ''}</p>
       </div>`;
 
-    const rows = results
-        .map((r) => {
-            const badgeClass = statusBadgeClass(r.status);
-            const duration = meta.durationsMs[r.agentName];
-            const durationText = duration !== undefined ? ` (${duration} ms)` : '';
-            const findingsHtml = r.findings && r.findings.length > 0
-                ? `<div class="mt-3 bg-gray-100 p-3 rounded">
+  const rows = results
+    .map((r) => {
+      const badgeClass = statusBadgeClass(r.status);
+      const duration = meta.durationsMs[r.agentName];
+      const durationText = duration !== undefined ? ` (${duration} ms)` : '';
+      const findingsHtml = r.findings && r.findings.length > 0
+        ? `<div class="mt-3 bg-gray-100 p-3 rounded">
                 <p class="font-semibold text-sm">Findings (${r.findings.length}):</p>
                 <ul class="list-disc pl-5 text-sm">
                   ${r.findings.map((f) => {
-                      const sevClass = f.severity === 'high' ? 'bg-red-100 text-red-800'
-                          : f.severity === 'medium' ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-gray-200 text-gray-700';
-                      const loc = f.location ? `<code>${escapeHtml(f.location)}</code> ` : '';
-                      return `<li><span class="px-1 py-0.5 text-xs rounded font-semibold ${sevClass}">${escapeHtml(f.severity)}</span> ${loc}${escapeHtml(f.message)}</li>`;
-                  }).join('')}
+          const sevClass = f.severity === 'high' ? 'bg-red-100 text-red-800'
+            : f.severity === 'medium' ? 'bg-yellow-100 text-yellow-800'
+              : 'bg-gray-200 text-gray-700';
+          const loc = f.location ? `<code>${escapeHtml(f.location)}</code> ` : '';
+          return `<li><span class="px-1 py-0.5 text-xs rounded font-semibold ${sevClass}">${escapeHtml(f.severity)}</span> ${loc}${escapeHtml(f.message)}</li>`;
+        }).join('')}
                 </ul>
                </div>`
-                : '';
-            const proposalsHtml = r.proposals && r.proposals.length > 0
-                ? `<div class="mt-3 bg-gray-50 p-3 rounded">
+        : '';
+      const proposalsHtml = r.proposals && r.proposals.length > 0
+        ? `<div class="mt-3 bg-gray-50 p-3 rounded">
                 <p class="font-semibold text-sm">Proposals (${r.proposals.length}):</p>
                 ${r.proposals.map((p) => `
                 <div class="mt-2 border rounded p-2 bg-white">
@@ -72,9 +72,9 @@ export function generateHtmlReport(results: SubagentResult[], meta: ReportMeta):
                   <pre class="mt-2 text-xs overflow-auto bg-gray-900 text-green-300 p-2 rounded">${renderProposalDiffHtml(p.originalCode, p.proposedCode)}</pre>
                 </div>`).join('')}
                </div>`
-                : '';
+        : '';
 
-            return `
+      return `
       <div class="card mb-4 p-4 border rounded shadow-sm">
         <div class="d-flex justify-between align-center mb-2">
           <h3 class="font-bold text-lg">${escapeHtml(r.agentName)} Subagent</h3>
@@ -85,10 +85,10 @@ export function generateHtmlReport(results: SubagentResult[], meta: ReportMeta):
         ${findingsHtml}
         ${proposalsHtml}
       </div>`;
-        })
-        .join('');
+    })
+    .join('');
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">

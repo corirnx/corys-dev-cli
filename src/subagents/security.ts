@@ -49,9 +49,9 @@ export class SecurityAgent extends BaseSubagent {
 
             if (!context.offline) {
                 const agentSummary = await this.queryAgentWithIgnore(context, {
-                                prompt: `Perform a strict security audit on ${context.targetPath}. Look for hardcoded secrets, insecure dependencies, and leaked credentials. Return a concise JSON summary: {"findings": string[], "hasCritical": boolean}.`,
-                                allowedTools: ['Glob', 'Grep', 'Read'],
-                            });
+                    prompt: `Perform a strict security audit on ${context.targetPath}. Look for hardcoded secrets, insecure dependencies, and leaked credentials. Return a concise JSON summary: {"findings": string[], "hasCritical": boolean}.`,
+                    allowedTools: ['Glob', 'Grep', 'Read'],
+                });
                 this.pushAgentReview(findings, agentSummary);
             }
 
