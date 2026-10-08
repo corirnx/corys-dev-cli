@@ -18,6 +18,7 @@ export interface SubagentResult {
     agentName: 'Security' | 'DependencyAudit' | 'Refactor';
     status: 'passed' | 'findings_found' | 'failed';
     summary: string;
+    riskSummary?: string;
     proposals?: CodeRewriteProposal[];
     findings?: Finding[];
     errors?: string[];

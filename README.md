@@ -12,7 +12,7 @@
 - **📦 Dependency & Model Audit Subagent:** Connects via MCP stdio to `models.dev` to audit active LLM model IDs, context windows, and feature deprecations.
 - **🛠 Refactoring Subagent:** Analyzes code quality, unhandled errors, and legacy patterns to generate automated rewrite proposals.
 - **🎨 Interactive Diff Engine:** Renders colored unified terminal diffs (`+ green` / `- red`) with options to apply changes, create an isolated Git feature branch, or skip proposals.
-- **📄 Structured Audit Reports:** Export audit summaries, security findings, model deprecation notices, and refactoring proposals to persistent files in **Markdown**, **JSON**, or **HTML** via `--format` / `--output`.
+- **📄 Structured Audit Reports:** Export audit summaries, security findings, model deprecation notices, and refactoring proposals to persistent files in **Markdown**, **JSON**, or **HTML** via `--format` / `--output`. Reports include run metadata (target, git branch/commit, mode, durations), severity-tagged findings, a per-subagent **risk assessment**, and inline diff previews for rewrite proposals.
 - **🛡 Git Safety Pre-Check:** Automatically detects uncommitted changes before agents run, offering to `git stash` work or abort to prevent accidental overwrites.
 - **🙈 Ignore Rules (`.corysignore`):** Fine-grained control over which paths the subagents' tools touch. Rules from `.gitignore` and `.corysignore` are honored automatically, and a default `.corysignore` template is created in each target repo.
 - **🔌 Multi-Provider Support:** Fully customizable via `.env` to work with OpenRouter, Anthropic, Google Vertex AI, or local LLM proxies (LiteLLM/Ollama).
@@ -164,9 +164,27 @@ Each format serves a different use:
 | `json` | Machine-readable metrics & structured findings (CI pipelines) |
 | `html` | A styled, self-contained report openable in a browser |
 
-Every report includes the generated timestamp and per-subagent status (`passed` / `findings found` / `failed`), plus full summaries, findings, deprecation notices, and rewrite proposals.
+Each report includes run metadata (target path, git branch/commit, subagents run, offline/dry-run mode, per-subagent duration) plus, per subagent, its status, summary, **risk assessment**, severity-tagged **findings** (with type, severity, and location), and rewrite proposals. To add it to your `.gitignore`/`.corysignore` or commit it, simply keep the generated file.
 
-For headless/CI runs, pair `--offline` (heuristics only, no API key required) with `-y` (auto-approve) or `-d` (dry-run) to avoid interactive prompts.
+Here is an example of what a Markdown report section looks like:
+
+```text
+### Security Agent
+**Status:** `findings_found`
+**Summary:**
+Found 4 security concern(s).
+
+**Risk assessment:** Low-risk posture: no urgent action required. Found 4 finding(s) (0 high, 0 medium, 4 low) across 1 category(ies).
+
+#### Findings (4)
+
+**By type:** dependency (4)
+**By severity:** low (4)
+
+- **[low]** `dependency` `package.json`: Suspicious dependency name: @anthropic-ai/claude-agent-sdk
+```
+
+Reports are generated **only** when you pass `--format`, `--output`, or both. For headless/CI runs, pair `--offline` (heuristics only, no API key required) with `-y` (auto-approve) or `-d` (dry-run) to avoid interactive prompts.
 
 ## Development Workflow
 When modifying or extending corys-dev-cli:

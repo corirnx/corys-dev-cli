@@ -2,6 +2,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { BaseSubagent } from './base.js';
 import { AgentContext, SubagentResult, Finding } from '../types/agent.js';
+import { summarizeRisk } from '../utils/risk.js';
 
 const SENSITIVE_PATTERNS = [
     /['"]?(?:api[_-]?key|apikey|api_secret|secret[_-]?key|password|token|jwt)['"]?\s*[:=]\s*['"][A-Za-z0-9_\-]{16,}['"]/gi,
@@ -38,6 +39,7 @@ export class SecurityAgent extends BaseSubagent {
                 summary: hasCritical
                     ? `Found ${findings.length} security concern(s).`
                     : 'No obvious security issues detected.',
+                riskSummary: summarizeRisk(findings),
                 findings: findings.length > 0 ? findings : undefined,
             };
         } catch (err) {

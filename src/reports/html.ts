@@ -1,5 +1,6 @@
 import { SubagentResult } from '../types/agent.js';
 import { ReportMeta } from '../types/cli.js';
+import { createTwoFilesPatch } from 'diff';
 
 function escapeHtml(text: string): string {
     return text
@@ -8,6 +9,15 @@ function escapeHtml(text: string): string {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+function normalizeTrailingNewline(text: string): string {
+    return text.endsWith('\n') ? text : text + '\n';
+}
+
+function renderProposalDiffHtml(original: string, proposed: string): string {
+    const patch = createTwoFilesPatch('original', 'proposed', normalizeTrailingNewline(original), normalizeTrailingNewline(proposed));
+    return escapeHtml(patch);
 }
 
 function statusBadgeClass(status: SubagentResult['status']): string {
@@ -56,9 +66,11 @@ export function generateHtmlReport(results: SubagentResult[], meta: ReportMeta):
             const proposalsHtml = r.proposals && r.proposals.length > 0
                 ? `<div class="mt-3 bg-gray-50 p-3 rounded">
                 <p class="font-semibold text-sm">Proposals (${r.proposals.length}):</p>
-                <ul class="list-disc pl-5 text-sm">
-                  ${r.proposals.map((p) => `<li><code>${escapeHtml(p.filePath)}</code> - ${escapeHtml(p.reasoning)}</li>`).join('')}
-                </ul>
+                ${r.proposals.map((p) => `
+                <div class="mt-2 border rounded p-2 bg-white">
+                  <p class="text-sm"><code>${escapeHtml(p.filePath)}</code> — ${escapeHtml(p.reasoning)}</p>
+                  <pre class="mt-2 text-xs overflow-auto bg-gray-900 text-green-300 p-2 rounded">${renderProposalDiffHtml(p.originalCode, p.proposedCode)}</pre>
+                </div>`).join('')}
                </div>`
                 : '';
 
@@ -69,6 +81,7 @@ export function generateHtmlReport(results: SubagentResult[], meta: ReportMeta):
           <span class="px-2 py-1 text-xs rounded font-semibold ${badgeClass}">${escapeHtml(r.status)}${escapeHtml(durationText)}</span>
         </div>
         <p class="text-gray-700 whitespace-pre-wrap">${escapeHtml(r.summary)}</p>
+        ${r.riskSummary ? `<p class="mt-2 text-sm font-medium text-gray-800">${escapeHtml(r.riskSummary)}</p>` : ''}
         ${findingsHtml}
         ${proposalsHtml}
       </div>`;

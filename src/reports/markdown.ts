@@ -35,6 +35,9 @@ export function generateMarkdownReport(results: SubagentResult[], meta: ReportMe
         const duration = meta.durationsMs[res.agentName];
         if (duration !== undefined) md += `**Duration:** ${duration} ms  \n`;
         md += `**Summary:**  \n${res.summary}\n\n`;
+        if (res.riskSummary) {
+            md += `**Risk assessment:** ${res.riskSummary}  \n\n`;
+        }
 
         if (res.findings && res.findings.length > 0) {
             // Category counts

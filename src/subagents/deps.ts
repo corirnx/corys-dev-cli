@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { BaseSubagent } from './base.js';
 import { AgentContext, SubagentResult, Finding } from '../types/agent.js';
+import { summarizeRisk } from '../utils/risk.js';
 
 export class DependencyAuditAgent extends BaseSubagent {
     readonly name = 'DependencyAudit' as const;
@@ -45,6 +46,7 @@ export class DependencyAuditAgent extends BaseSubagent {
                 summary: hasFindings
                     ? `Found ${findings.length} dependency/model concern(s).`
                     : 'Dependencies and model references look clean.',
+                riskSummary: summarizeRisk(findings),
                 findings: findings.length > 0 ? findings : undefined,
             };
         } catch (err) {
