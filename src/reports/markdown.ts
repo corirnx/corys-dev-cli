@@ -1,6 +1,10 @@
 import { SubagentResult } from '../types/agent.js';
 import { ReportMeta } from '../types/cli.js';
 
+function severityRank(s: string): number {
+    return s === 'high' ? 3 : s === 'medium' ? 2 : 1;
+}
+
 export function generateMarkdownReport(results: SubagentResult[], meta: ReportMeta): string {
     const timestamp = new Date().toISOString();
     let md = `# Corys-Dev Audit Report\n\n`;
@@ -33,9 +37,24 @@ export function generateMarkdownReport(results: SubagentResult[], meta: ReportMe
         md += `**Summary:**  \n${res.summary}\n\n`;
 
         if (res.findings && res.findings.length > 0) {
-            md += `#### Findings\n\n`;
+            // Category counts
+            const byType = new Map<string, number>();
+            const bySeverity = new Map<string, number>();
+            for (const f of res.findings) {
+                byType.set(f.type, (byType.get(f.type) ?? 0) + 1);
+                bySeverity.set(f.severity, (bySeverity.get(f.severity) ?? 0) + 1);
+            }
+            const typeSummary = [...byType.entries()].map(([t, n]) => `${t} (${n})`).join(', ');
+            const severitySummary = [...bySeverity.entries()]
+                .sort((a, b) => severityRank(b[0]) - severityRank(a[0]))
+                .map(([s, n]) => `${s} (${n})`).join(', ');
+
+            md += `#### Findings (${res.findings.length})\n\n`;
+            md += `**By type:** ${typeSummary}  \n`;
+            md += `**By severity:** ${severitySummary}  \n\n`;
             res.findings.forEach((finding) => {
-                md += `- ${finding}\n`;
+                const loc = finding.location ? ` \`${finding.location}\`` : '';
+                md += `- **[${finding.severity}]** \`${finding.type}\`${loc}: ${finding.message}\n`;
             });
             md += `\n`;
         }

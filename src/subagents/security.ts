@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { BaseSubagent } from './base.js';
-import { AgentContext, SubagentResult } from '../types/agent.js';
+import { AgentContext, SubagentResult, Finding } from '../types/agent.js';
 
 const SENSITIVE_PATTERNS = [
     /['"]?(?:api[_-]?key|apikey|api_secret|secret[_-]?key|password|token|jwt)['"]?\s*[:=]\s*['"][A-Za-z0-9_\-]{16,}['"]/gi,
@@ -15,7 +15,7 @@ export class SecurityAgent extends BaseSubagent {
     readonly name = 'Security' as const;
 
     async run(context: AgentContext): Promise<SubagentResult> {
-        const findings: string[] = [];
+        const findings: Finding[] = [];
         try {
             await this.scanDirectory(context.targetPath, findings);
             findings.push(...(await this.auditLockfiles(context.targetPath)));
@@ -27,7 +27,7 @@ export class SecurityAgent extends BaseSubagent {
                             });
                 const review = agentSummary.trim();
                 if (review) {
-                    findings.push(`Agent review: ${review.slice(0, 800)}`);
+                    findings.push({ type: 'agent-review', severity: 'medium', message: `Agent review: ${review.slice(0, 800)}` });
                 }
             }
 
@@ -50,7 +50,7 @@ export class SecurityAgent extends BaseSubagent {
         }
     }
 
-    private async scanDirectory(dir: string, findings: string[]): Promise<void> {
+    private async scanDirectory(dir: string, findings: Finding[]): Promise<void> {
         const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
         for (const entry of entries) {
             const fullPath = path.join(dir, entry.name);
@@ -66,14 +66,23 @@ export class SecurityAgent extends BaseSubagent {
                 pattern.lastIndex = 0;
                 const matches = text.match(pattern);
                 if (matches) {
-                    findings.push(`Possible secret in ${fullPath}: ${matches[0].slice(0, 80)}`);
+                    findings.push({
+                        type: 'secret',
+                        severity: this.isHighRiskPattern(pattern) ? 'high' : 'medium',
+                        message: `Possible secret (${pattern})`,
+                        location: fullPath,
+                    });
                 }
             }
         }
     }
 
-    private async auditLockfiles(targetPath: string): Promise<string[]> {
-        const out: string[] = [];
+    private isHighRiskPattern(pattern: RegExp): boolean {
+        return /PRIVATE KEY/i.test(pattern.source) || /AKIA/.test(pattern.source);
+    }
+
+    private async auditLockfiles(targetPath: string): Promise<Finding[]> {
+        const out: Finding[] = [];
         const pkgPath = path.join(targetPath, 'package.json');
         const pkg = await readFile(pkgPath, 'utf-8').catch(() => null);
         if (!pkg) return out;
@@ -81,7 +90,12 @@ export class SecurityAgent extends BaseSubagent {
         if (!parsed.dependencies) return out;
         for (const [name, version] of Object.entries(parsed.dependencies)) {
             if (version.startsWith('^') && name !== name.toLowerCase().replace(/[^a-z0-9-]/g, '')) {
-                out.push(`Suspicious dependency name: ${name}`);
+                out.push({
+                    type: 'dependency',
+                    severity: 'low',
+                    message: `Suspicious dependency name: ${name}`,
+                    location: 'package.json',
+                });
             }
         }
         return out;

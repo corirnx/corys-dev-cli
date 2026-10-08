@@ -43,7 +43,13 @@ export function generateHtmlReport(results: SubagentResult[], meta: ReportMeta):
                 ? `<div class="mt-3 bg-gray-100 p-3 rounded">
                 <p class="font-semibold text-sm">Findings (${r.findings.length}):</p>
                 <ul class="list-disc pl-5 text-sm">
-                  ${r.findings.map((f) => `<li>${escapeHtml(f)}</li>`).join('')}
+                  ${r.findings.map((f) => {
+                      const sevClass = f.severity === 'high' ? 'bg-red-100 text-red-800'
+                          : f.severity === 'medium' ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-200 text-gray-700';
+                      const loc = f.location ? `<code>${escapeHtml(f.location)}</code> ` : '';
+                      return `<li><span class="px-1 py-0.5 text-xs rounded font-semibold ${sevClass}">${escapeHtml(f.severity)}</span> ${loc}${escapeHtml(f.message)}</li>`;
+                  }).join('')}
                 </ul>
                </div>`
                 : '';

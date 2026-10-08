@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { BaseSubagent } from './base.js';
-import { AgentContext, SubagentResult } from '../types/agent.js';
+import { AgentContext, SubagentResult, Finding } from '../types/agent.js';
 
 export class DependencyAuditAgent extends BaseSubagent {
     readonly name = 'DependencyAudit' as const;
 
     async run(context: AgentContext): Promise<SubagentResult> {
-        const findings: string[] = [];
+        const findings: Finding[] = [];
         try {
             const pkgPath = path.join(context.targetPath, 'package.json');
             const pkgText = await readFile(pkgPath, 'utf-8').catch(() => null);
@@ -16,7 +16,12 @@ export class DependencyAuditAgent extends BaseSubagent {
             if (pkg?.dependencies) {
                 for (const [name, version] of Object.entries(pkg.dependencies)) {
                     if (version.includes('*') || version.includes('latest') || version.includes('workspace:')) {
-                        findings.push(`Loose dependency version for ${name}: ${version}`);
+                        findings.push({
+                            type: 'dependency',
+                            severity: 'low',
+                            message: `Loose dependency version for ${name}: ${version}`,
+                            location: 'package.json',
+                        });
                     }
                 }
             }
@@ -29,7 +34,7 @@ export class DependencyAuditAgent extends BaseSubagent {
                 });
                 const review = agentSummary.trim();
                 if (review) {
-                    findings.push(`Agent review: ${review.slice(0, 800)}`);
+                    findings.push({ type: 'agent-review', severity: 'medium', message: `Agent review: ${review.slice(0, 800)}` });
                 }
             }
 
