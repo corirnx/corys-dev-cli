@@ -7,7 +7,7 @@
     "url": "https://github.com/corirnx/corys-dev-cli"
   },
   "version": "1.0.0",
-  "description": "Cory's personal developer CLI for multi-agent repository maintenance and audits",
+  "description": "Cory's developer CLI for repository maintenance and audits using AI agents.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
