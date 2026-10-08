@@ -13,7 +13,8 @@ const DEFAULT_IGNORES = [
     '*.min.css',
     'package-lock.json',
     'pnpm-lock.yaml',
-    'yarn.lock'
+    'yarn.lock',
+    '.env'
 ];
 
 export const CORYSIGNORE_FILENAME = '.corysignore';

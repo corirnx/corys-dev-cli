@@ -14,16 +14,14 @@ export class DependencyAuditAgent extends BaseSubagent {
             const pkgText = await readFile(pkgPath, 'utf-8').catch(() => null);
             const pkg = pkgText ? (JSON.parse(pkgText) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> }) : undefined;
 
-            if (pkg?.dependencies) {
-                for (const [name, version] of Object.entries(pkg.dependencies)) {
-                    if (version.includes('*') || version.includes('latest') || version.includes('workspace:')) {
-                        findings.push({
-                            type: 'dependency',
-                            severity: 'low',
-                            message: `Loose dependency version for ${name}: ${version}`,
-                            location: 'package.json',
-                        });
-                    }
+            const depGroups: Record<string, Record<string, string>> = {};
+            if (pkg?.dependencies) depGroups.dependencies = pkg.dependencies;
+            if (pkg?.devDependencies) depGroups.devDependencies = pkg.devDependencies;
+
+            for (const [group, deps] of Object.entries(depGroups)) {
+                for (const [name, version] of Object.entries(deps)) {
+                    const finding = this.classifyDependencyVersion(name, version, group);
+                    if (finding) findings.push(finding);
                 }
             }
 
@@ -54,6 +52,27 @@ export class DependencyAuditAgent extends BaseSubagent {
                 errors: [err instanceof Error ? err.message : String(err)],
             };
         }
+    }
+
+    private classifyDependencyVersion(name: string, version: string, group: string): Finding | null {
+        const groupLabel = group === 'devDependencies' ? 'dev dependency' : 'dependency';
+        if (version.includes('*') || version.includes('latest') || version.includes('workspace:')) {
+            return {
+                type: 'dependency',
+                severity: 'medium',
+                message: `Floating ${groupLabel} version for ${name}: ${version} (unbound — may change unexpectedly)`,
+                location: 'package.json',
+            };
+        }
+        if (version.startsWith('^') || version.startsWith('~')) {
+            return {
+                type: 'dependency',
+                severity: 'low',
+                message: `Loose ${groupLabel} range for ${name}: ${version} (consider pinning the exact version)`,
+                location: 'package.json',
+            };
+        }
+        return null;
     }
 
     private extractModelIds(pkgText: string): string[] {
