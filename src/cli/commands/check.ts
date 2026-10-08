@@ -44,7 +44,7 @@ export function registerCheckCommand(program: Command): void {
         });
 }
 
-function validateReportFormat(value: string): ReportFormat {
+export function validateReportFormat(value: string): ReportFormat {
     if (value === 'markdown' || value === 'json' || value === 'html') {
         return value;
     }

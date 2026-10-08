@@ -33,10 +33,7 @@ export class DependencyAuditAgent extends BaseSubagent {
                     prompt: `Audit dependencies and LLM model IDs in ${context.targetPath}. Known model IDs in codebase: ${modelIds.join(', ') || 'none'}. Use the models-dev MCP server get_model_specs tool to verify each model ID and flag deprecated or unknown ones. Inspect package.json for outdated or suspicious packages. Return a concise JSON summary: {"findings": string[], "recommendations": string[]}.`,
                     allowedTools: ['Read', 'Glob', 'Grep'],
                 });
-                const review = agentSummary.trim();
-                if (review) {
-                    findings.push({ type: 'agent-review', severity: 'medium', message: `Agent review: ${review.slice(0, 800)}` });
-                }
+                this.pushAgentReview(findings, agentSummary);
             }
 
             const hasFindings = findings.length > 0;

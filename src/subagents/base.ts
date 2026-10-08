@@ -1,6 +1,6 @@
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { AgentContext, SubagentResult } from '../types/agent.js';
+import { AgentContext, SubagentResult, Finding } from '../types/agent.js';
 import { buildCombinedIgnoreDocument } from '../utils/ignore.js';
 import { queryAgent, QueryAgentOptions } from '../orchestrator/agent-sdk.js';
 
@@ -11,6 +11,17 @@ const TEMP_IGNORE_FILENAME = '.ignore';
 export abstract class BaseSubagent {
     abstract readonly name: 'Security' | 'DependencyAudit' | 'Refactor';
     abstract run(context: AgentContext): Promise<SubagentResult>;
+
+    /**
+     * Append an agent review finding only when the agent returned non-empty text,
+     * so empty AI responses are not counted as findings.
+     */
+    protected pushAgentReview(findings: Finding[], agentSummary: string): void {
+        const review = (agentSummary ?? '').trim();
+        if (review) {
+            findings.push({ type: 'agent-review', severity: 'medium', message: `Agent review: ${review.slice(0, 800)}` });
+        }
+    }
 
     /**
      * Run a Claude Agent SDK query with the target repository's ignore rules

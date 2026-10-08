@@ -38,35 +38,26 @@ export async function runMaintenance(context: ExecutionContext): Promise<Subagen
 
     const durationsMs: Record<string, number> = {};
 
-    async function timedRun(agentName: string, run: () => Promise<SubagentResult>): Promise<SubagentResult> {
+    async function runSubagent(agentName: string, spinnerText: string, run: () => Promise<SubagentResult>): Promise<void> {
+        const spinner = createSpinner(spinnerText + '...');
+        spinner.start();
         const start = performance.now();
         const res = await run();
         durationsMs[agentName] = Math.round(performance.now() - start);
-        return res;
+        res.status === 'failed' ? spinner.fail(spinnerText + ' failed') : spinner.succeed(spinnerText + ' completed');
+        results.push(res);
     }
 
     if (runAll || selected.includes('security')) {
-        const spinner = createSpinner('[SECURITY] Running security & secrets audit...');
-        spinner.start();
-        const res = await timedRun('Security', () => new SecurityAgent().run(agentContext));
-        res.status === 'failed' ? spinner.fail('[SECURITY] Audit failed') : spinner.succeed('[SECURITY] Audit completed');
-        results.push(res);
+        await runSubagent('Security', '[SECURITY] Running security & secrets audit', () => new SecurityAgent().run(agentContext));
     }
 
     if (runAll || selected.includes('deps')) {
-        const spinner = createSpinner('[DEPENDENCIES] Auditing lockfiles & models.dev...');
-        spinner.start();
-        const res = await timedRun('DependencyAudit', () => new DependencyAuditAgent().run(agentContext));
-        res.status === 'failed' ? spinner.fail('[DEPENDENCIES] Audit failed') : spinner.succeed('[DEPENDENCIES] Audit completed');
-        results.push(res);
+        await runSubagent('DependencyAudit', '[DEPENDENCIES] Auditing lockfiles & models.dev', () => new DependencyAuditAgent().run(agentContext));
     }
 
     if (runAll || selected.includes('refactor')) {
-        const spinner = createSpinner('[REFACTOR] Analyzing AST and code quality...');
-        spinner.start();
-        const res = await timedRun('Refactor', () => new RefactorAgent().run(agentContext));
-        res.status === 'failed' ? spinner.fail('[REFACTOR] Analysis failed') : spinner.succeed('[REFACTOR] Analysis completed');
-        results.push(res);
+        await runSubagent('Refactor', '[REFACTOR] Analyzing AST and code quality', () => new RefactorAgent().run(agentContext));
     }
 
     const allProposals: CodeRewriteProposal[] = [];

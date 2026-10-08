@@ -193,12 +193,19 @@ When modifying or extending corys-dev-cli:
 # Run in development mode using tsx
 npm run dev -- check --subagents security
 
+# Run the unit test suite (Vitest)
+npm test
+
 # Build TypeScript to dist/
 npm run build
 
 # Run TypeScript build (used before publish; does not relink)
 npm run prepublishOnly
 ```
+
+Tests cover the pure logic (risk summaries, ignore rules, report generators, report-format validation) and the git-status helper. Test files live alongside the source under `src/` (`*.test.ts`) and are excluded from the production build.
+
+> **Note on `git stash`:** the Git safety guard can auto-stash uncommitted changes before running. If it does, remember to `git stash pop` afterward to restore your work.
 
 ---
 
