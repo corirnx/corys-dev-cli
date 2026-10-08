@@ -16,3 +16,18 @@ export interface ExecutionContext {
     absolutePath: string;
     options: CheckCommandOptions;
 }
+
+/**
+ * Metadata describing an audit run, used to enrich generated reports.
+ */
+export interface ReportMeta {
+    targetPath: string;
+    targetDir: string;
+    gitBranch?: string;
+    gitCommit?: string;
+    subagents: string[];
+    offline: boolean;
+    dryRun: boolean;
+    /** Duration in milliseconds for each subagent by agent name. */
+    durationsMs: Record<string, number>;
+}

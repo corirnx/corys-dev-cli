@@ -10,6 +10,7 @@ export interface SubagentResult {
     status: 'passed' | 'findings_found' | 'failed';
     summary: string;
     proposals?: CodeRewriteProposal[];
+    findings?: string[];
     errors?: string[];
 }
 

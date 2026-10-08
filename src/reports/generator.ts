@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { SubagentResult } from '../types/agent.js';
-import { ReportFormat } from '../types/cli.js';
+import { ReportFormat, ReportMeta } from '../types/cli.js';
 import { generateMarkdownReport } from './markdown.js';
 import { generateJsonReport } from './json.js';
 import { generateHtmlReport } from './html.js';
@@ -9,6 +9,7 @@ import { logSuccess, logError } from '../cli/ui.js';
 
 export async function saveAuditReport(
     results: SubagentResult[],
+    meta: ReportMeta,
     format: ReportFormat,
     outputPath?: string
 ): Promise<void> {
@@ -18,13 +19,13 @@ export async function saveAuditReport(
 
     switch (format) {
         case 'markdown':
-            content = generateMarkdownReport(results);
+            content = generateMarkdownReport(results, meta);
             break;
         case 'json':
-            content = generateJsonReport(results);
+            content = generateJsonReport(results, meta);
             break;
         case 'html':
-            content = generateHtmlReport(results);
+            content = generateHtmlReport(results, meta);
             break;
         default:
             logError(`Unsupported report format: ${format}`);

@@ -25,7 +25,10 @@ export class SecurityAgent extends BaseSubagent {
                                 prompt: `Perform a strict security audit on ${context.targetPath}. Look for hardcoded secrets, insecure dependencies, and leaked credentials. Return a concise JSON summary: {"findings": string[], "hasCritical": boolean}.`,
                                 allowedTools: ['Glob', 'Grep', 'Read'],
                             });
-                findings.push(`Agent review: ${agentSummary.slice(0, 800)}`);
+                const review = agentSummary.trim();
+                if (review) {
+                    findings.push(`Agent review: ${review.slice(0, 800)}`);
+                }
             }
 
             const hasCritical = findings.length > 0;
@@ -35,6 +38,7 @@ export class SecurityAgent extends BaseSubagent {
                 summary: hasCritical
                     ? `Found ${findings.length} security concern(s).`
                     : 'No obvious security issues detected.',
+                findings: findings.length > 0 ? findings : undefined,
             };
         } catch (err) {
             return {
